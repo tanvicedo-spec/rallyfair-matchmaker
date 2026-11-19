@@ -1,0 +1,558 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0d2834">
+  <title>RallyFair — Pickleball Matchmaker</title>
+  <style>
+    :root { --ink:#163440; --muted:#637c86; --bg:#f5f8f6; --paper:#ffffff; --line:#dce7e3; --green:#157c63; --lime:#cafa72; --dark:#0d2834; --red:#a43b4b; --shadow:0 10px 30px rgba(17,51,63,.055); }
+    * { box-sizing:border-box; }
+    body { margin:0; color:var(--ink); background:var(--bg); font:15px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Arial,sans-serif; }
+    button,input,textarea,select { font:inherit; }
+    button { cursor:pointer; }
+    .shell { max-width:1180px; margin:auto; padding:0 22px 42px; }
+    .hero { background:var(--dark); color:white; margin:0 -22px 27px; padding:32px 22px 29px; position:relative; overflow:hidden; }
+    .hero::after { content:""; width:260px; height:260px; border:38px solid rgba(202,250,114,.12); border-radius:50%; position:absolute; right:-90px; top:-170px; pointer-events:none; }
+    .hero-inner { max-width:1136px; margin:auto; position:relative; z-index:1; }
+    .eyebrow { font-size:11px; color:var(--lime); text-transform:uppercase; letter-spacing:.18em; font-weight:800; }
+    h1 { font-size:clamp(29px,5vw,42px); margin:7px 0 6px; letter-spacing:-.045em; line-height:1.08; }
+    .hero p { color:#c4d7d7; margin:0; max-width:630px; }
+    .topline { display:flex; justify-content:space-between; align-items:end; flex-wrap:wrap; gap:20px; }
+    .tag { padding:8px 12px; font-size:12px; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18); border-radius:30px; color:#dff4e8; }
+    .layout { display:grid; grid-template-columns:minmax(320px,400px) minmax(0,1fr); gap:22px; align-items:start; }
+    .stack { display:grid; gap:20px; }
+    .panel { background:var(--paper); border:1px solid var(--line); border-radius:17px; box-shadow:var(--shadow); padding:22px; min-width:0; }
+    .section-title { margin:0 0 3px; font-size:19px; font-weight:800; letter-spacing:-.025em; }
+    .sub { margin:0 0 18px; color:var(--muted); font-size:13px; }
+    .field-label { display:block; font-size:12px; color:#45616c; font-weight:750; margin:0 0 5px; }
+    .form-grid { display:grid; grid-template-columns:minmax(0,1fr) minmax(145px,1fr); gap:10px; }
+    .mode-picker { display:flex; align-items:center; flex-wrap:wrap; gap:10px; padding:13px; border-radius:11px; background:#f3f8f5; border:1px solid #e0ece4; margin-bottom:15px; }
+    .mode-picker label { font-size:12px; font-weight:800; color:#315b4d; white-space:nowrap; }
+    .mode-picker select { max-width:100%; width:auto; flex:1; min-width:180px; }
+    .skill-mini { display:block; color:#678179; font-size:11px; font-weight:600; margin-top:1px; }
+    .team-players { display:flex; gap:12px; flex-wrap:wrap; }
+    .category-indicator { display:inline-block; padding:4px 9px; border-radius:7px; color:#256a55; background:#ecf6ef; font-size:11px; font-weight:800; }
+    .roster-table select { min-width:155px; width:100%; padding:7px 8px; font-size:12px; }
+    [hidden] { display:none !important; }
+    input[type="text"], input[type="number"],textarea,select { background:#fcfefd; border:1px solid #cbdcd5; color:var(--ink); border-radius:9px; padding:10px 11px; width:100%; outline:none; }
+    input:focus,textarea:focus,select:focus { border-color:var(--green); box-shadow:0 0 0 3px rgba(21,124,99,.13); }
+    input[type="checkbox"] { accent-color:var(--green); width:17px; height:17px; }
+    .buttons { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+    .btn { border:1px solid var(--line); background:white; color:var(--ink); font-size:13px; font-weight:750; border-radius:9px; padding:10px 14px; transition:.12s ease; }
+    .btn:hover { background:#eff7f3; }
+    .btn:disabled { opacity:.4; cursor:not-allowed; }
+    .btn-primary { background:var(--green); border-color:var(--green); color:white; }
+    .btn-primary:hover { background:#0d6651; }
+    .btn-hero { background:var(--lime); border-color:var(--lime); color:#153e30; }
+    .btn-hero:hover { background:#bdec61; }
+    .btn-danger { color:var(--red); }
+    .btn-lg { padding:13px 22px; font-size:15px; }
+    .mini-note { font-size:12px; color:var(--muted); line-height:1.5; }
+    .divider { border:0; border-top:1px solid var(--line); margin:17px 0; }
+    textarea { resize:vertical; min-height:98px; }
+    .roster-wrap { overflow-x:auto; }
+    .roster-table { width:100%; border-collapse:collapse; font-size:13px; }
+    .roster-table th { color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.06em; text-align:left; font-weight:800; padding:7px 5px; }
+    .roster-table td { border-top:1px solid #eff3f0; padding:7px 5px; }
+    .roster-table input[type="text"] { min-width:116px; padding:7px 8px; }
+    .roster-table input[type="number"] { width:70px; padding:7px; }
+    .roster-table td:last-child,.roster-table th:last-child { text-align:center; }
+    .inactive { opacity:.45; }
+    .stats { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin-bottom:18px; }
+    .stat { padding:13px 14px; border-radius:12px; background:#f2f8f5; border:1px solid #e3eee8; }
+    .stat .num { font-size:25px; font-weight:850; letter-spacing:-.05em; line-height:1; }
+    .stat .desc { margin-top:6px; color:var(--muted); font-size:11px; font-weight:700; }
+    .round-actions { display:flex; gap:10px; flex-wrap:wrap; align-items:end; margin:12px 0 14px; }
+    .round-actions .control { width:118px; }
+    .round-actions .control input { padding:11px; }
+    .notice { border-radius:10px; font-size:13px; padding:10px 12px; margin:10px 0; background:#e9f5ee; color:#1c6550; }
+    .notice.error { background:#fff0f0; color:#a13d46; }
+    .note-quiet { color:var(--muted); margin-top:13px; font-size:12px; }
+    .round-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin:24px 0 13px; }
+    .round-label { font-size:18px; font-weight:850; margin:0; }
+    .round-time { font-size:12px; color:var(--muted); }
+    .court-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:13px; }
+    .court { border:1px solid #d5e8dd; border-radius:14px; overflow:hidden; background:#fff; }
+    .court-top { padding:9px 13px; display:flex; justify-content:space-between; align-items:center; background:#e6f4e9; color:#215743; font-size:12px; font-weight:800; }
+    .court-body { padding:14px; }
+    .team-row { display:flex; gap:9px; justify-content:space-between; align-items:center; padding:10px 0; }
+    .team-row + .team-row { border-top:1px dashed #deebe3; }
+    .team-title { color:var(--muted); font-size:10px; font-weight:850; text-transform:uppercase; letter-spacing:.1em; }
+    .team-names { font-size:14px; font-weight:760; line-height:1.5; overflow-wrap:anywhere; }
+    .team-sum { color:#176a55; font-weight:900; font-variant-numeric:tabular-nums; padding:4px 7px; border-radius:7px; background:#ecf6ef; white-space:nowrap; }
+    .balance { color:var(--muted); font-size:11px; margin-top:7px; border-top:1px solid #edf3ed; padding-top:10px; }
+    .bench { margin-top:14px; background:#f5f7f7; border:1px solid #e4eae7; padding:12px 14px; border-radius:10px; font-size:13px; }
+    .bench b { color:#435b5f; }
+    .empty { padding:34px 20px; border:1px dashed #bfd4c8; border-radius:14px; text-align:center; color:#688178; background:#fafdfe; }
+    .empty-emoji { font-size:29px; margin-bottom:8px; }
+    .history-item { border-top:1px solid var(--line); padding:10px 0; }
+    .history-item summary { cursor:pointer; color:#365d55; font-weight:700; }
+    .history-item p { font-size:13px; color:var(--muted); margin:7px 0 0; }
+    .history-item ul { padding-left:19px; font-size:13px; margin:7px 0; }
+    .result-box { margin-top:13px; padding:12px; background:#f5f9f6; border:1px solid #dcece3; border-radius:10px; }
+    .result-head { display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:7px; font-size:12px; font-weight:800; }
+    .result-label { color:#296e5b; font-size:12px; font-weight:800; }
+    .score-form { display:flex; gap:7px; align-items:end; flex-wrap:wrap; }
+    .score-form label { width:72px; color:#4f6c64; font-size:11px; font-weight:750; }
+    .score-form input { min-width:0; padding:8px; margin-top:3px; text-align:center; font-size:17px; font-weight:850; font-variant-numeric:tabular-nums; }
+    .score-form .versus { padding-bottom:7px; color:#7c958b; font-weight:800; }
+    .score-form .btn { padding:9px 11px; }
+    .score-form .score-controls { display:flex; flex-wrap:wrap; gap:6px; align-items:end; }
+    .score-message { margin:9px 0 0; padding:8px 10px; border:1px solid #b9dfc8; border-radius:8px; background:#e6f5ed; color:#216149; font-size:12px; font-weight:650; }
+    .score-message.error { border-color:#eab3b7; background:#fff1f2; color:#a13d46; }
+    .score-form input:focus { border-color:#157c63; }
+    .backup-line { margin-top:8px; display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+    .backup-line input[type=file] { display:none; }
+    .winner { color:#1e755b; font-weight:750; font-size:12px; }
+    .winner.pending { color:var(--muted); font-weight:550; }
+    .history-score { margin:10px 0 8px; padding:10px; }
+    .history-match { padding:9px 0; border-top:1px solid #eef3ef; }
+    .history-match:first-child { border:0; }
+    .history-match-title { font-size:13px; overflow-wrap:anywhere; }
+    .standings-top { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; }
+    .sort-wrap { display:flex; gap:8px; align-items:center; }
+    .sort-wrap label { white-space:nowrap; font-size:12px; font-weight:750; }
+    .sort-wrap select { width:auto; min-width:145px; padding:9px 12px; font-size:13px; }
+    .leaderboard { width:100%; border-collapse:collapse; font-size:13px; white-space:nowrap; }
+    .leaderboard th { padding:10px 9px; text-align:right; color:var(--muted); font-size:11px; text-transform:uppercase; background:#f5f9f6; }
+    .leaderboard td { padding:11px 9px; border-top:1px solid #eaf1ed; text-align:right; font-variant-numeric:tabular-nums; }
+    .leaderboard th:nth-child(2),.leaderboard td:nth-child(2) { text-align:left; }
+    .leaderboard th:first-child,.leaderboard td:first-child { text-align:center; }
+    .leaderboard .leader { font-weight:850; color:var(--green); }
+    .leaderboard .rank { font-weight:850; }
+    .leaderboard .highlight-cell { font-weight:850; color:var(--green); background:#f2f9f2; }
+    .board-wrap { overflow-x:auto; margin-top:15px; }
+    .standings-legend { margin:12px 0 0; font-size:12px; color:var(--muted); }
+    .badge-small { display:inline-block; margin-left:5px; font-size:10px; font-weight:650; color:#788d84; }
+    .print-only { display:none; }
+    .footer { text-align:center; font-size:12px; color:#80908c; margin-top:28px; }
+    @media(max-width:830px) { .layout { grid-template-columns:1fr; } .shell { padding:0 13px 30px; } .hero { margin:0 -13px 18px; } }
+    @media(max-width:480px) { .form-grid {grid-template-columns:1fr;} .mode-picker {align-items:stretch;} .mode-picker select {width:100%;} .panel { padding:16px; } .stats { grid-template-columns:repeat(2,minmax(0,1fr));gap:6px; } .stat { padding:11px 9px; } .stat .num { font-size:23px; } .score-form label {width:64px;} .score-form .btn{padding:8px;} .court-grid{grid-template-columns:minmax(0,1fr);} }
+    @media print { body {background:white;} .hero { color:var(--ink); background:white; padding:0 0 20px;} .hero p,.hero .eyebrow {color:var(--ink);} .layout {display:block;} .sidebar, .controls, .footer, .history-panel, .standings-panel, .tag {display:none !important;} .panel {box-shadow:none; border:0; padding:0;} .court {break-inside:avoid;} .round-actions,.score-form {display:none !important;} .result-box{border:0;padding:5px 0;background:white;} }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="hero"><div class="hero-inner"><div class="topline"><div><div class="eyebrow">THE PICKLEBALL PLAYBOOK</div><h1>RallyFair <span style="color:var(--lime)">/</span> Matchmaker</h1><p>Create balanced doubles matches, record final scores, and follow wins, win rates, and leaderboards.</p></div><span class="tag">Doubles · Skill-based · Works offline</span></div></div></header>
+    <div class="layout">
+      <aside class="stack sidebar">
+        <section class="panel">
+          <h2 class="section-title">Player roster</h2><p class="sub">Choose how to rate your players, then create fairly matched doubles games.</p>
+          <div class="mode-picker"><label for="skillMode">Player skill format</label><select id="skillMode" aria-label="Choose skill input format"><option value="categories">Skill categories (Beginner to High Advanced)</option><option value="ratings">Numeric ratings (e.g. 3.50)</option></select></div>
+          <form id="addForm">
+            <div class="form-grid"><div><label class="field-label" for="newName">Player name</label><input id="newName" type="text" maxlength="55" placeholder="e.g., Alex" required></div><div id="numericInputWrap"><label class="field-label" for="newRating">Numeric rating</label><input id="newRating" type="number" min="1" max="8" step="0.01" value="3.00"></div><div id="categoryInputWrap" hidden><label class="field-label" for="newLevel">Skill category</label><select id="newLevel" aria-label="New player skill category"></select></div></div>
+            <div style="margin-top:10px" class="buttons"><button type="submit" class="btn btn-primary">+ Add player</button><button type="button" id="sampleBtn" class="btn">Try sample roster</button></div>
+          </form>
+          <p class="mini-note" id="skillHelp" style="margin:12px 0 0">Choose one of eight skill categories; the program uses their order to balance teams. These are club labels, not official DUPR ratings.</p>
+          <div class="divider"></div>
+          <div class="buttons" style="justify-content:space-between"><b id="rosterTitle">Players (0)</b><button class="btn btn-danger" style="padding:6px 8px" id="clearAllBtn" type="button">Clear all</button></div>
+          <div class="roster-wrap"><table class="roster-table"><thead><tr><th>Name</th><th id="skillColHead">Skill level</th><th>Active</th></tr></thead><tbody id="rosterBody"></tbody></table></div>
+          <p class="mini-note">Uncheck <b>Active</b> if someone leaves. You can edit each player’s name and skill at any time.</p>
+        </section>
+        <section class="panel">
+          <h2 class="section-title">Bulk add players</h2><p class="sub" id="bulkHelp">One player per line: <b>Name, Skill Category</b></p>
+          <textarea id="bulkInput" spellcheck="false" placeholder="Maria, Beginner&#10;John, High Beginner&#10;Leah, Intermediate"></textarea>
+          <div class="buttons" style="margin-top:10px"><button id="bulkBtn" class="btn" type="button">Import list</button><span class="mini-note">Duplicates are skipped.</span></div>
+        </section>
+      </aside>
+      <main class="stack">
+        <section class="panel controls">
+          <h2 class="section-title">Match control</h2><p class="sub">Matches are built from four players per court, with similar skill levels grouped where possible.</p>
+          <div class="stats"><div class="stat"><div class="num" id="statActive">0</div><div class="desc">Active players</div></div><div class="stat"><div class="num" id="statRounds">0</div><div class="desc">Rounds made</div></div><div class="stat"><div class="num" id="statGames">0</div><div class="desc">Matches assigned</div></div><div class="stat"><div class="num" id="statScored">0</div><div class="desc">Scores recorded</div></div></div>
+          <div class="round-actions"><div class="control"><label class="field-label" for="courtCount">Available courts</label><input id="courtCount" type="number" min="1" max="20" value="2"></div><button id="generateBtn" class="btn btn-hero btn-lg" type="button">Generate next round</button><button id="undoBtn" class="btn" type="button">Undo last</button></div>
+          <div class="buttons"><button id="exportBtn" class="btn" type="button">Export match CSV</button><button id="printBtn" class="btn" type="button">Print matches</button><button id="resetBtn" class="btn btn-danger" type="button">Reset rounds</button></div>
+          <div class="backup-line"><button id="backupBtn" class="btn" type="button">Download session backup</button><button id="restoreBtn" class="btn" type="button">Restore backup</button><input id="restoreFile" type="file" accept="application/json,.json"><span class="mini-note">Back up your roster, matches and scores when using a phone.</span></div>
+          <p class="note-quiet">Priority: similar skill levels + balanced doubles teams + fair playing/rest rotation. Partner repeats are reduced, not guaranteed to be eliminated.</p>
+          <div id="notice" role="status" aria-live="polite" hidden></div>
+          <div id="storageWarning" class="notice error" role="status" hidden>⚠ This browser is blocking permanent storage. Scores will work now, but may disappear after you close the page. Download a session backup, or open this app on a regular HTTPS website.</div>
+        </section>
+        <section class="panel" id="outputPanel"><div id="currentRound"><div class="empty"><div class="empty-emoji">🏓</div><b>Your courts are ready</b><div>Enter at least four active players, then generate a round.</div></div></div></section>
+        <section class="panel standings-panel"><div class="standings-top"><div><h2 class="section-title">🏆 Player leaderboard</h2><p class="sub" style="margin-bottom:0">Results from recorded match scores only.</p></div><div class="sort-wrap"><label for="rankBy">Rank by</label><select id="rankBy"><option value="wins">Most wins</option><option value="points">Total points</option></select></div></div><div id="leaderboard"></div><div class="buttons" style="margin-top:14px"><button id="exportStandingsBtn" class="btn" type="button">Export leaderboard CSV</button></div><p class="standings-legend">A win is credited to both winning teammates. Each teammate earns the full points scored by their team. Win rate = wins ÷ completed games × 100. Matches without saved scores do not affect standings.</p></section>
+        <section class="panel history-panel"><h2 class="section-title">Session history</h2><p class="sub">Open an earlier round to record or correct scores. Unscored matches do not count toward wins.</p><div id="history"></div><div id="playerStats"></div></section>
+      </main>
+    </div>
+    <footer class="footer">RallyFair · Your roster and matches are saved only in this browser. No account or internet connection required.</footer>
+  </div>
+<script>
+'use strict';
+const STORAGE_KEY = 'rallyfair_matchmaker_v1';
+const $ = id => document.getElementById(id);
+const LEVELS = [
+  {id:'beginner', label:'Beginner', weight:1, example:2.0},
+  {id:'high-beginner', label:'High Beginner', weight:2, example:2.5},
+  {id:'low-intermediate', label:'Low Intermediate', weight:3, example:3.0},
+  {id:'intermediate', label:'Intermediate', weight:4, example:3.25},
+  {id:'high-intermediate', label:'High Intermediate', weight:5, example:3.5},
+  {id:'low-advanced', label:'Low Advanced', weight:6, example:3.75},
+  {id:'advanced', label:'Advanced', weight:7, example:4.0},
+  {id:'high-advanced', label:'High Advanced', weight:8, example:4.5}
+];
+const LEVEL_MAP = new Map(LEVELS.map(level=>[level.id,level]));
+const LEVEL_ALIASES = {'high inter':'high-intermediate','low inter':'low-intermediate','low advance':'low-advanced','high advance':'high-advanced','advance':'advanced'};
+function levelFromRating(value){
+  const rating = Number(value);
+  if(rating < 2.50)return 'beginner';
+  if(rating < 3.00)return 'high-beginner';
+  if(rating < 3.25)return 'low-intermediate';
+  if(rating < 3.50)return 'intermediate';
+  if(rating < 3.75)return 'high-intermediate';
+  if(rating < 4.00)return 'low-advanced';
+  if(rating < 4.50)return 'advanced';
+  return 'high-advanced';
+}
+function normalizeLevel(value){
+  const key=String(value??'').trim().toLowerCase().replace(/[-_]+/g,' ').replace(/\s+/g,' ');
+  const id=LEVEL_ALIASES[key]||key.replace(/ /g,'-');
+  return LEVEL_MAP.has(id)?id:null;
+}
+function playerSkill(p){return state.skillMode==='categories'?(LEVEL_MAP.get(p.level)?.weight||LEVEL_MAP.get(levelFromRating(p.rating)).weight):p.rating;}
+function skillText(p){return state.skillMode==='categories'?(LEVEL_MAP.get(p.level)?.label||LEVEL_MAP.get(levelFromRating(p.rating)).label):fmt(p.rating);}
+function normalizePlayer(p){const rating=Number(p.rating);return {...p,rating,level:normalizeLevel(p.level)||levelFromRating(rating),active:p.active!==false};}
+let state = { players:[], rounds:[], courts:2, rankBy:'wins', skillMode:'categories' };
+let storageAvailable = true;
+
+function loadState(){
+  try { const data = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    if(data && Array.isArray(data.players) && Array.isArray(data.rounds)) {
+      state = {players:data.players.filter(p=>p && typeof p.id==='string' && typeof p.name==='string' && Number.isFinite(Number(p.rating)) && Number(p.rating)>=1 && Number(p.rating)<=8).map(normalizePlayer),rounds:data.rounds,courts:Math.max(1,Math.min(20,Number(data.courts)||2)),rankBy:data.rankBy==='points'?'points':'wins',skillMode:data.skillMode==='categories'?'categories':'ratings'};
+    }
+  } catch(e) { /* browser storage may be unavailable */ }
+}
+function checkStorage(){
+  try { const key='rallyfair_storage_probe';localStorage.setItem(key,'1');localStorage.removeItem(key);storageAvailable=true; }
+  catch(e) {storageAvailable=false;}
+  updateStorageWarning();
+}
+function updateStorageWarning(){ $('storageWarning').hidden=storageAvailable; }
+function saveState(){
+  try {localStorage.setItem(STORAGE_KEY,JSON.stringify(state));storageAvailable=true;updateStorageWarning();return true;}
+  catch(e) {storageAvailable=false;updateStorageWarning();return false;}
+}
+function h(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function fmt(n){return Number(n).toFixed(2);}
+function uid(){return 'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,9);}
+function showNotice(message,isError=false){ const el=$('notice');el.hidden=false;el.className='notice'+(isError?' error':'');el.textContent=message; }
+function clearNotice(){ $('notice').hidden=true; }
+function allActive(){return state.players.filter(p=>p.active!==false);}
+function playerName(id){return state.players.find(p=>p.id===id)?.name || 'Former player';}
+function haveName(name,except=null){return state.players.some(p=>p.id!==except && p.name.trim().toLowerCase()===name.trim().toLowerCase());}
+function addPlayer(name,skill,mode=state.skillMode){
+  name=String(name).trim();
+  if(!name || name.length>55)return 'Enter a player name (up to 55 characters).';
+  if(haveName(name))return 'That player is already on the roster.';
+  let rating,level;
+  if(mode==='categories'){
+    level=normalizeLevel(skill);
+    if(!level)return 'Choose a valid skill category from Beginner to High Advanced.';
+    rating=LEVEL_MAP.get(level).example; // editable starting value if numeric mode is chosen later
+  }else{
+    if(String(skill).trim()==='')return 'Enter a rating from 1.00 to 8.00.';
+    rating=Number(skill);
+    if(!Number.isFinite(rating)||rating<1||rating>8)return 'Enter a rating from 1.00 to 8.00.';
+    level=levelFromRating(rating);
+  }
+  state.players.push({id:uid(),name,rating,level,active:true});return null;
+}
+function pairKey(a,b){return [a,b].sort().join('|');}
+function getHistoryCounts(){
+  const partner=new Map(), opponent=new Map();
+  for(const round of state.rounds){
+    for(const m of (round.matches||[])){
+      for(const team of [m.a,m.b]) {let k=pairKey(team[0],team[1]);partner.set(k,(partner.get(k)||0)+1);}
+      for(const a of m.a)for(const b of m.b){let k=pairKey(a,b);opponent.set(k,(opponent.get(k)||0)+1);}
+    }
+  }
+  return {partner,opponent};
+}
+function getPlayerStats(id){
+  let games=0,sits=0,restStreak=0,lastPlayed=-1;
+  state.rounds.forEach((r,i)=>{
+    const played=(r.matches||[]).some(m=>m.a.includes(id)||m.b.includes(id));
+    if(played){games++;lastPlayed=i;restStreak=0;}
+    else if((r.bench||[]).includes(id)){sits++;restStreak++;}
+  });
+  return {games,sits,restStreak,lastPlayed};
+}
+function isScored(m){ return Number.isInteger(m.scoreA) && m.scoreA>=0 && Number.isInteger(m.scoreB) && m.scoreB>=0 && m.scoreA!==m.scoreB; }
+function getCompetitionStats(id){
+  const s={completed:0,wins:0,losses:0,points:0,against:0,pointDiff:0,winRate:0};
+  for(const r of state.rounds){for(const m of (r.matches||[])){
+    if(!isScored(m))continue;
+    const inA=m.a.includes(id),inB=m.b.includes(id);
+    if(!inA && !inB)continue;
+    const my=inA?m.scoreA:m.scoreB,other=inA?m.scoreB:m.scoreA;
+    s.completed++;s.points+=my;s.against+=other;if(my>other)s.wins++;else s.losses++;
+  }}
+  s.pointDiff=s.points-s.against;
+  s.winRate=s.completed?s.wins/s.completed*100:0;
+  return s;
+}
+function rankedPlayers(){
+  return state.players.map(p=>({...p,standing:getCompetitionStats(p.id)})).sort((a,b)=>{
+    const x=a.standing,y=b.standing;
+    if(state.rankBy==='points')return y.points-x.points || y.wins-x.wins || y.winRate-x.winRate || y.pointDiff-x.pointDiff || a.name.localeCompare(b.name);
+    return y.wins-x.wins || y.winRate-x.winRate || y.points-x.points || y.pointDiff-x.pointDiff || a.name.localeCompare(b.name);
+  });
+}
+function chooseActive(players,needed){
+  return players.map(p=>({p,s:getPlayerStats(p.id),tie:Math.random()})).sort((a,b)=>
+    a.s.games-b.s.games || b.s.restStreak-a.s.restStreak || a.s.lastPlayed-b.s.lastPlayed || a.tie-b.tie
+  ).slice(0,needed).map(x=>x.p);
+}
+function bestSplit(group,counts){
+  const splits=[[[0,1],[2,3]],[[0,2],[1,3]],[[0,3],[1,2]]];
+  let best=null;
+  for(const [ai,bi] of splits){
+    const a=ai.map(i=>group[i]),b=bi.map(i=>group[i]);
+    const aSum=playerSkill(a[0])+playerSkill(a[1]),bSum=playerSkill(b[0])+playerSkill(b[1]);
+    const repeats=(counts.partner.get(pairKey(a[0].id,a[1].id))||0)+(counts.partner.get(pairKey(b[0].id,b[1].id))||0);
+    let opponentRepeats=0;
+    for(const x of a)for(const y of b)opponentRepeats+=counts.opponent.get(pairKey(x.id,y.id))||0;
+    const score=12*Math.pow(aSum-bSum,2)+2.3*repeats+.26*opponentRepeats;
+    if(!best || score<best.score-1e-8 || (Math.abs(score-best.score)<1e-8 && Math.random()<.5)) best={a,b,aSum,bSum,score};
+  }
+  const ratings=group.map(playerSkill);
+  const spread=Math.max(...ratings)-Math.min(...ratings);
+  return {...best,score:best.score+3.7*spread*spread};
+}
+function makeCourtGroups(selected,counts){
+  let sorted=[...selected].sort((a,b)=>playerSkill(b)-playerSkill(a) || Math.random()-.5);
+  const groups=[];
+  for(let i=0;i<sorted.length;i+=4)groups.push(sorted.slice(i,i+4));
+  function cost(gs){return gs.reduce((s,g)=>s+bestSplit(g,counts).score,0);}
+  if(groups.length===1)return groups;
+  let current=groups.map(g=>[...g]),currentCost=cost(current);
+  let optimal=current.map(g=>[...g]),optimalCost=currentCost;
+  const rounds=900;
+  for(let step=0;step<rounds;step++){
+    let a=Math.floor(Math.random()*selected.length),b=Math.floor(Math.random()*selected.length);
+    let ga=Math.floor(a/4),gb=Math.floor(b/4);if(ga===gb)continue;
+    let proposed=current.map(g=>[...g]);
+    [proposed[ga][a%4],proposed[gb][b%4]]=[proposed[gb][b%4],proposed[ga][a%4]];
+    const nextCost=cost(proposed),delta=nextCost-currentCost;
+    const temp=.95*(1-step/rounds)+.025;
+    if(delta<0 || Math.random()<Math.exp(-delta/temp)) {current=proposed;currentCost=nextCost;}
+    if(currentCost<optimalCost-1e-9){optimal=current.map(g=>[...g]);optimalCost=currentCost;}
+  }
+  return optimal.sort((a,b)=> b.reduce((s,p)=>s+playerSkill(p),0)-a.reduce((s,p)=>s+playerSkill(p),0));
+}
+function makeRound(){
+  const pool=allActive();const courts=Math.min(state.courts,Math.floor(pool.length/4));
+  if(courts<1){showNotice('Add at least four active players to create a doubles match.',true);return;}
+  const selected=chooseActive(pool,courts*4);
+  const ids=new Set(selected.map(p=>p.id));const bench=pool.filter(p=>!ids.has(p.id)).map(p=>p.id);
+  const counts=getHistoryCounts(),groups=makeCourtGroups(selected,counts);
+  const matches=groups.map((g,i)=>{
+    const x=bestSplit(g,counts);
+    return {court:i+1,a:x.a.map(p=>p.id),b:x.b.map(p=>p.id),aSum:x.aSum,bSum:x.bSum,scoreA:null,scoreB:null};
+  });
+  state.rounds.push({date:new Date().toISOString(),mode:state.skillMode,matches,bench,names:Object.fromEntries(state.players.map(p=>[p.id,p.name])),levels:Object.fromEntries(state.players.map(p=>[p.id,p.level]))});
+  saveState();render();showNotice(`Round ${state.rounds.length} generated: ${matches.length} court${matches.length===1?'':'s'} and ${bench.length} resting player${bench.length===1?'':'s'}.`);
+}
+function levelOptions(selected){return LEVELS.map(l=>`<option value="${l.id}" ${l.id===selected?'selected':''}>${h(l.label)}</option>`).join('');}
+function renderSkillMode(){
+  const category=state.skillMode==='categories';
+  $('skillMode').value=state.skillMode;
+  $('numericInputWrap').hidden=category;
+  $('categoryInputWrap').hidden=!category;
+  $('newRating').required=!category;
+  $('newLevel').required=category;
+  $('skillColHead').textContent=category?'Skill level':'Rating';
+  $('skillHelp').textContent=category
+    ?'Pick one of eight ordered skill levels. They are used to balance teams, but are not official DUPR rating conversions.'
+    :'Numeric ratings from 1.00 to 8.00. If you switch from categories, review the suggested numeric ratings before generating matches.';
+  $('bulkHelp').innerHTML=category?'One player per line: <b>Name, Skill Category</b>':'One player per line: <b>Name, Rating</b>';
+  $('bulkInput').placeholder=category?'Maria, Beginner\nJohn, High Beginner\nLeah, High Intermediate':'Maria, 3.25\nJohn, 3.50\nLeah, 2.75';
+}
+function renderRoster(){
+  const active=allActive();$('rosterTitle').textContent=`Players (${active.length} active / ${state.players.length} total)`;
+  const category=state.skillMode==='categories';
+  $('rosterBody').innerHTML=state.players.length ? state.players.map(p=>`<tr class="${p.active?'':'inactive'}"><td><input type="text" data-kind="name" data-id="${h(p.id)}" value="${h(p.name)}" aria-label="Player name" maxlength="55"></td><td>${category?`<select data-kind="level" data-id="${h(p.id)}" aria-label="Skill category for ${h(p.name)}">${levelOptions(p.level)}</select>`:`<input type="number" data-kind="rating" data-id="${h(p.id)}" value="${fmt(p.rating)}" min="1" max="8" step="0.01" aria-label="Skill rating for ${h(p.name)}">`}</td><td><input type="checkbox" data-kind="active" data-id="${h(p.id)}" ${p.active?'checked':''} aria-label="Active player"></td></tr>`).join('') : `<tr><td colspan="3" class="mini-note" style="text-align:left">No players added yet.</td></tr>`;
+}
+function teamHtml(ids,round,showLevels=false){
+  return ids.map(id=>{
+    const name=h(round.names?.[id]||playerName(id));
+    if(showLevels && round.mode==='categories'){
+      const level=LEVEL_MAP.get(round.levels?.[id])?.label || LEVEL_MAP.get(state.players.find(p=>p.id===id)?.level)?.label || 'Unknown';
+      return `<span>${name}<small class="skill-mini">${h(level)}</small></span>`;
+    }
+    return name;
+  }).join(showLevels && round.mode==='categories'?' <span style="color:#91a49e">&amp;</span> ':' &amp; ');
+}
+function winnerHtml(m){
+  return isScored(m) ? `<span class="winner">✓ Team ${m.scoreA>m.scoreB?'A':'B'} won · ${m.scoreA}–${m.scoreB}</span>` : '<span class="winner pending">Not scored yet</span>';
+}
+function scoreForm(roundIndex,matchIndex,m,compact=false){
+  // Use an explicit click handler (not browser form validation) so mobile users see errors.
+  return `<div class="result-box ${compact?'history-score':''}"><div class="result-head"><span class="result-label">Final score</span>${winnerHtml(m)}</div><form class="score-form" novalidate data-round="${roundIndex}" data-match="${matchIndex}"><label>Team A<input name="scoreA" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" autocomplete="off" placeholder="0" value="${isScored(m)?m.scoreA:''}" aria-label="Team A final score, court ${m.court}"></label><span class="versus">–</span><label>Team B<input name="scoreB" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" autocomplete="off" placeholder="0" value="${isScored(m)?m.scoreB:''}" aria-label="Team B final score, court ${m.court}"></label><div class="score-controls"><button class="btn btn-primary save-score" type="button">Save score</button>${isScored(m)?'<button type="button" class="btn clear-score">Clear</button>':''}</div></form><div class="score-message" role="status" aria-live="polite" hidden></div></div>`;
+}
+function renderCurrent(){
+  const round=state.rounds.at(-1),el=$('currentRound');
+  if(!round){el.innerHTML='<div class="empty"><div class="empty-emoji">🏓</div><b>Your courts are ready</b><div>Enter at least four active players, then generate a round.</div></div>';return;}
+  const roundIndex=state.rounds.length-1;
+  el.innerHTML=`<div class="round-head"><h2 class="round-label">Round ${state.rounds.length}</h2><span class="round-time">${h(new Date(round.date).toLocaleString())}</span></div><div class="court-grid">${round.matches.map((m,i)=>`<article class="court"><div class="court-top"><span>COURT ${m.court}</span><span>DOUBLES</span></div><div class="court-body"><div class="team-row"><div><div class="team-title">Team A</div><div class="team-names ${round.mode==='categories'?'team-players':''}">${teamHtml(m.a,round,true)}</div></div>${round.mode==='categories'?'<span class="category-indicator">Team A</span>':`<span class="team-sum">${fmt(m.aSum)}</span>`}</div><div class="team-row"><div><div class="team-title">Team B</div><div class="team-names ${round.mode==='categories'?'team-players':''}">${teamHtml(m.b,round,true)}</div></div>${round.mode==='categories'?'<span class="category-indicator">Team B</span>':`<span class="team-sum">${fmt(m.bSum)}</span>`}</div><div class="balance">${round.mode==='categories'?(Math.abs(m.aSum-m.bSum)<.001?'<b>Balanced skill categories</b> · Both teams have equal combined skill levels':'<b>Skill categories balanced</b> · Closest available teams within this group'):`Team rating difference: <b>${fmt(Math.abs(m.aSum-m.bSum))}</b> ${Math.abs(m.aSum-m.bSum)<.26?'· Very close':'· Closest available within this group'}`}</div>${scoreForm(roundIndex,i,m)}</div></article>`).join('')}</div>${round.bench.length?`<div class="bench"><b>Resting this round:</b> ${round.bench.map(id=>h(round.names?.[id]||playerName(id))).join(', ')}</div>`:'<div class="bench"><b>Everyone is playing this round.</b></div>'}`;
+}
+function renderLeaderboard(){
+  $('rankBy').value=state.rankBy;
+  const players=rankedPlayers();
+  $('exportStandingsBtn').disabled=!players.length;
+  if(!players.length){$('leaderboard').innerHTML='<p class="mini-note">Add players to start a leaderboard. Rankings update automatically as you save scores.</p>';return;}
+  $('leaderboard').innerHTML=`<div class="board-wrap"><table class="leaderboard"><thead><tr><th>#</th><th>Player</th><th>Wins</th><th>Losses</th><th>Win rate</th><th>Points</th><th>Pts diff</th></tr></thead><tbody>${players.map((p,i)=>{
+    const s=p.standing;return `<tr><td class="rank">${i+1}</td><td class="${i===0&&s.completed?'leader':''}">${h(p.name)}${!p.active?'<span class="badge-small">inactive</span>':''}<small class="skill-mini">${h(skillText(p))}</small></td><td class="${state.rankBy==='wins'?'highlight-cell':''}">${s.wins}</td><td>${s.losses}</td><td>${s.winRate.toFixed(1)}%</td><td class="${state.rankBy==='points'?'highlight-cell':''}">${s.points}</td><td>${s.pointDiff>0?'+':''}${s.pointDiff}</td></tr>`;
+  }).join('')}</tbody></table></div>${!state.rounds.some(r=>r.matches.some(isScored))?'<p class="mini-note" style="margin-top:8px">No scores saved yet. Everyone starts at 0.</p>':''}`;
+}
+function renderHistory(){
+  const opened=new Set([...$('history').querySelectorAll('details[open]')].map(el=>el.dataset.round));
+  const prior=state.rounds.slice(0,-1).map((r,i)=>({r,i})).reverse();
+  $('history').innerHTML=prior.length ? prior.map(({r,i})=>`<details class="history-item" data-round="${i}"><summary>Round ${i+1} · ${r.matches.length} court${r.matches.length===1?'':'s'} · ${r.matches.filter(isScored).length}/${r.matches.length} scored</summary><div>${r.matches.map((m,j)=>`<div class="history-match"><div class="history-match-title"><b>Court ${m.court}:</b> ${teamHtml(m.a,r)} vs ${teamHtml(m.b,r)}</div>${scoreForm(i,j,m,true)}</div>`).join('')}</div><p>Resting: ${r.bench.length?r.bench.map(id=>h(r.names?.[id]||playerName(id))).join(', '):'None'}</p></details>`).join('') : '<p class="mini-note">Earlier rounds will appear here. Open them to add or edit scores.</p>';
+  [...$('history').querySelectorAll('details')].forEach(el=>{if(opened.has(el.dataset.round))el.open=true;});
+  const stats=state.players.map(p=>({...p,stat:getPlayerStats(p.id)})).sort((a,b)=>a.stat.games-b.stat.games || a.name.localeCompare(b.name));
+  $('playerStats').innerHTML=stats.length ? `<div class="divider"></div><b style="font-size:13px">Player participation (scheduled games, including unscored matches)</b><div class="roster-wrap"><table class="roster-table"><thead><tr><th>Player</th><th>Games</th><th>Rests</th></tr></thead><tbody>${stats.map(p=>`<tr><td>${h(p.name)}</td><td>${p.stat.games}</td><td>${p.stat.sits}</td></tr>`).join('')}</tbody></table></div>` : '';
+}
+function render(){
+  $('courtCount').value=state.courts;
+  renderSkillMode();
+  $('statActive').textContent=allActive().length;
+  $('statRounds').textContent=state.rounds.length;
+  $('statGames').textContent=state.rounds.reduce((n,r)=>n+r.matches.length,0);
+  $('statScored').textContent=state.rounds.reduce((n,r)=>n+r.matches.filter(isScored).length,0);
+  $('undoBtn').disabled=!state.rounds.length;$('exportBtn').disabled=!state.rounds.length;
+  $('printBtn').disabled=!state.rounds.length;$('resetBtn').disabled=!state.rounds.length;
+  renderRoster();renderCurrent();renderLeaderboard();renderHistory();
+}
+function csvCell(value){return '"'+String(value??'').replace(/"/g,'""')+'"';}
+function downloadCSV(rows,filename){
+  const blob=new Blob(['\ufeff'+rows.map(row=>row.map(csvCell).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+function exportCSV(){
+  if(!state.rounds.length){showNotice('Generate a round before exporting.',true);return;}
+  const lines=[['Round','Date','Court','Team A player 1','Team A player 2','Team A skill','Team A score','Team B player 1','Team B player 2','Team B skill','Team B score','Winning team','Status','Skill difference','Resting players','Skill system']];
+  state.rounds.forEach((r,i)=>r.matches.forEach(m=>lines.push([i+1,r.date,m.court,r.names?.[m.a[0]]||playerName(m.a[0]),r.names?.[m.a[1]]||playerName(m.a[1]),r.mode==='categories'?m.a.map(id=>LEVEL_MAP.get(r.levels?.[id])?.label||'Unknown').join(' / '):fmt(m.aSum),isScored(m)?m.scoreA:'',r.names?.[m.b[0]]||playerName(m.b[0]),r.names?.[m.b[1]]||playerName(m.b[1]),r.mode==='categories'?m.b.map(id=>LEVEL_MAP.get(r.levels?.[id])?.label||'Unknown').join(' / '):fmt(m.bSum),isScored(m)?m.scoreB:'',isScored(m)?(m.scoreA>m.scoreB?'Team A':'Team B'):'',isScored(m)?'Completed':'Not scored',r.mode==='categories'?'Category-based':fmt(Math.abs(m.aSum-m.bSum)),r.bench.map(id=>r.names?.[id]||playerName(id)).join('; '),r.mode==='categories'?'Categories':'Ratings'])));
+  downloadCSV(lines,'pickleball-matches.csv');
+}
+function exportStandingsCSV(){
+  const lines=[['Rank','Player','Skill','Skill system','Active','Completed matches','Wins','Losses','Win rate %','Total team points','Points conceded','Point difference','Ranked by']];
+  rankedPlayers().forEach((p,i)=>lines.push([i+1,p.name,skillText(p),state.skillMode==='categories'?'Categories':'Ratings',p.active?'Yes':'No',p.standing.completed,p.standing.wins,p.standing.losses,p.standing.winRate.toFixed(1),p.standing.points,p.standing.against,p.standing.pointDiff,state.rankBy==='wins'?'Wins':'Total points']));
+  downloadCSV(lines,'pickleball-leaderboard.csv');
+}
+function scoreMessage(form,message,isError=false){
+  const el=form.closest('.result-box')?.querySelector('.score-message');
+  if(el){el.hidden=false;el.className='score-message'+(isError?' error':'');el.textContent=message;}
+}
+function saveScoreForm(form){
+  if(!form || !form.matches('.score-form'))return;
+  const ri=Number(form.dataset.round), mi=Number(form.dataset.match);
+  const m=state.rounds[ri]?.matches?.[mi];
+  if(!m){scoreMessage(form,'Cannot locate this match. Generate a new round or restore your backup.',true);return;}
+  const inputA=form.querySelector('input[name="scoreA"]');
+  const inputB=form.querySelector('input[name="scoreB"]');
+  const aRaw=inputA?.value.trim()??'', bRaw=inputB?.value.trim()??'';
+  if(!aRaw||!bRaw){scoreMessage(form,'Enter the final score for BOTH Team A and Team B.',true);return;}
+  if(!/^\d{1,3}$/.test(aRaw)||!/^\d{1,3}$/.test(bRaw)){
+    scoreMessage(form,'Scores must be whole numbers from 0 to 999 (e.g. 11 and 8).',true);return;
+  }
+  const a=Number(aRaw),b=Number(bRaw);
+  if(a===b){scoreMessage(form,'Final scores cannot be tied. Enter the winning score.',true);return;}
+  m.scoreA=a;m.scoreB=b;
+  const persisted=saveState();
+  render();
+  const updated=[...document.querySelectorAll('.score-form')].find(el=>Number(el.dataset.round)===ri&&Number(el.dataset.match)===mi);
+  const message=`✓ Saved! Round ${ri+1}, court ${m.court}: Team ${a>b?'A':'B'} won ${a}–${b}. Win rates and leaderboard updated.`;
+  if(updated)scoreMessage(updated,persisted?message:message+' ⚠ This device did not save it permanently; download a session backup.',!persisted);
+  showNotice(persisted?message:'Score recorded for this session, but this browser cannot save it permanently. Download a session backup.',!persisted);
+}
+function handleScoreClick(e){
+  const btn=e.target.closest('.save-score');
+  if(!btn)return;
+  e.preventDefault();
+  saveScoreForm(btn.closest('form'));
+}
+function handleScoreSubmit(e){
+  if(!e.target.matches('.score-form'))return;
+  e.preventDefault();
+  saveScoreForm(e.target);
+}
+function clearScore(e){
+  const btn=e.target.closest('.clear-score');if(!btn)return;
+  const form=btn.closest('form'),ri=Number(form.dataset.round),mi=Number(form.dataset.match);
+  const m=state.rounds[ri]?.matches?.[mi];if(!m)return;
+  delete m.scoreA;delete m.scoreB;saveState();render();showNotice(`Score cleared for round ${ri+1}, court ${m.court}. Standings updated.`);
+}
+function exportBackup(){
+  const blob=new Blob([JSON.stringify({version:3,exportedAt:new Date().toISOString(),state},null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='rallyfair-session-backup.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  showNotice('Session backup downloaded. Keep this JSON file to restore your players and saved scores.');
+}
+async function importBackup(file){
+  if(!file)return;
+  try{
+    if(file.size>5*1024*1024)throw new Error('Backup file is too large.');
+    const json=JSON.parse(await file.text());const restored=json.state;
+    if(!restored || !Array.isArray(restored.players) || !Array.isArray(restored.rounds))throw new Error('Not a valid RallyFair session backup.');
+    if(restored.players.length>2000 || restored.rounds.length>10000)throw new Error('Backup is too large.');
+    const cleanPlayers=restored.players.map(p=>normalizePlayer({id:String(p.id||''),name:String(p.name||'').slice(0,55),rating:Number(p.rating),level:p.level,active:p.active!==false}));
+    if(cleanPlayers.some(p=>!/^p[a-z0-9]{5,30}$/i.test(p.id)||!p.name||!Number.isFinite(p.rating)||p.rating<1||p.rating>8))throw new Error('Backup contains an invalid player.');
+    const ids=new Set(cleanPlayers.map(p=>p.id));
+    if(ids.size!==cleanPlayers.length)throw new Error('Backup contains duplicate player IDs.');
+    for(const round of restored.rounds){
+      if(!round||!Array.isArray(round.matches)||!Array.isArray(round.bench)||round.matches.length>20)throw new Error('Backup contains an invalid round.');
+      for(const m of round.matches){
+        if(!m || !Array.isArray(m.a)||!Array.isArray(m.b)||m.a.length!==2||m.b.length!==2||![...m.a,...m.b].every(id=>ids.has(id)))throw new Error('Backup contains an invalid match.');
+        if(m.scoreA!=null && (!Number.isInteger(m.scoreA)||m.scoreA<0||m.scoreA>999))throw new Error('Backup contains an invalid score.');
+        if(m.scoreB!=null && (!Number.isInteger(m.scoreB)||m.scoreB<0||m.scoreB>999))throw new Error('Backup contains an invalid score.');
+      }
+    }
+    if(!confirm('Restore this backup? It will replace the current roster and all saved scores.'))return;
+    state={players:cleanPlayers,rounds:restored.rounds,courts:Math.max(1,Math.min(20,Number(restored.courts)||2)),rankBy:restored.rankBy==='points'?'points':'wins',skillMode:restored.skillMode==='categories'?'categories':'ratings'};
+    const persisted=saveState();render();showNotice(persisted?'Backup restored, including match scores and leaderboard.':'Backup restored for this session, but browser storage is blocked. Save a new backup before closing.',!persisted);
+  }catch(e){showNotice(`Could not restore backup: ${e.message}`,true);}
+  finally{$('restoreFile').value='';}
+}
+$('addForm').addEventListener('submit',e=>{e.preventDefault();clearNotice();const skill=state.skillMode==='categories'?$('newLevel').value:$('newRating').value;const err=addPlayer($('newName').value,skill);if(err){showNotice(err,true);return;}$('newName').value='';saveState();render();$('newName').focus();});
+$('rosterBody').addEventListener('change',e=>{
+  const field=e.target,kind=field.dataset.kind,id=field.dataset.id;
+  const p=state.players.find(p=>p.id===id);if(!p)return;
+  if(kind==='name') {const val=field.value.trim();if(!val||haveName(val,p.id)){showNotice('Name cannot be blank or already used.',true);render();return;}p.name=val;}
+  if(kind==='rating') {const raw=field.value.trim(),val=Number(raw);if(!raw||!Number.isFinite(val)||val<1||val>8){showNotice('Rating must be between 1.00 and 8.00.',true);render();return;}p.rating=val;p.level=levelFromRating(val);}
+  if(kind==='level'){const level=normalizeLevel(field.value);if(!level){showNotice('Please select a valid skill category.',true);render();return;}p.level=level;}
+  if(kind==='active')p.active=field.checked;
+  saveState();render();
+});
+$('bulkBtn').addEventListener('click',()=>{
+  const rows=$('bulkInput').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+  if(!rows.length){showNotice(state.skillMode==='categories'?'Paste at least one line: Player Name, High Beginner':'Paste at least one line: Player Name, 3.25',true);return;}
+  let added=0,skipped=0;
+  rows.forEach(line=>{const parts=line.split(',');if(parts.length!==2 || addPlayer(parts[0],parts[1])!==null)skipped++;else added++;});
+  $('bulkInput').value='';saveState();render();showNotice(`Imported ${added} player${added===1?'':'s'}. ${skipped} invalid or duplicate line${skipped===1?'':'s'} skipped.`,!!skipped&&!added);
+});
+$('sampleBtn').addEventListener('click',()=>{
+  const sample=[['Alex',4.10],['Blake',3.90],['Casey',3.75],['Dana',3.80],['Ellis',3.40],['Frankie',3.25],['Gray',3.30],['Harper',3.15],['Indy',2.95],['Jamie',2.80],['Kai',2.70],['Logan',2.85]];
+  let added=0;sample.forEach(([n,r])=>{if(addPlayer(n,state.skillMode==='categories'?levelFromRating(r):r)===null)added++;});
+  saveState();render();showNotice(`Added ${added} demo players. You can edit their names and skills.`);
+});
+$('skillMode').addEventListener('change',e=>{const next=e.target.value==='categories'?'categories':'ratings';if(next===state.skillMode)return;state.skillMode=next;saveState();render();showNotice(next==='categories'?'Skill categories enabled. Existing players were given a suggested category; review and edit their levels as needed. New rounds will use categories.':'Numeric ratings enabled. Category-only players have starter numeric values; review them before creating new rounds. Previous scores and rounds are unchanged.');});
+$('courtCount').addEventListener('change',e=>{state.courts=Math.max(1,Math.min(20,Math.floor(Number(e.target.value)||1)));saveState();render();});
+$('generateBtn').addEventListener('click',()=>{clearNotice();makeRound();});
+$('rankBy').addEventListener('change',e=>{state.rankBy=e.target.value==='points'?'points':'wins';saveState();renderLeaderboard();});
+$('currentRound').addEventListener('submit',handleScoreSubmit);
+$('history').addEventListener('submit',handleScoreSubmit);
+$('currentRound').addEventListener('click',handleScoreClick);
+$('history').addEventListener('click',handleScoreClick);
+$('currentRound').addEventListener('click',clearScore);
+$('history').addEventListener('click',clearScore);
+$('undoBtn').addEventListener('click',()=>{if(!state.rounds.length)return;if(state.rounds.at(-1).matches.some(isScored)&&!confirm('The last round contains saved scores. Delete that round and its results?'))return;state.rounds.pop();saveState();render();showNotice('Last round undone.');});
+$('resetBtn').addEventListener('click',()=>{if(state.rounds.length && confirm('Clear every round? Your player roster will be kept.')){state.rounds=[];saveState();render();showNotice('Round history cleared.');}});
+$('clearAllBtn').addEventListener('click',()=>{if(state.players.length && confirm('Clear ALL players and all round history?')){state={players:[],rounds:[],courts:state.courts,rankBy:state.rankBy,skillMode:state.skillMode};saveState();render();showNotice('All players and rounds cleared.');}});
+$('exportBtn').addEventListener('click',exportCSV);
+$('backupBtn').addEventListener('click',exportBackup);
+$('restoreBtn').addEventListener('click',()=>$('restoreFile').click());
+$('restoreFile').addEventListener('change',e=>importBackup(e.target.files?.[0]));
+$('exportStandingsBtn').addEventListener('click',exportStandingsCSV);
+$('printBtn').addEventListener('click',()=>window.print());
+$('newLevel').innerHTML=levelOptions('beginner');
+loadState();render();checkStorage();
+</script>
+</body>
+</html>
